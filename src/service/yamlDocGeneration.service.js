@@ -1,11 +1,11 @@
-const fs = require("fs");
-const YAML = require("js-yaml");
-const JSON2YAML = require('yaml');
+const fs = require("fs")
+const YAML = require("js-yaml")
+const JSON2YAML = require('json-to-pretty-yaml')
 
 exports.yamlDocGeneration = async (body) => {
     try {
-        const raw = fs.readFileSync("src/routes/uploads/swagger-v1.yml");
-        const data = YAML.load(raw);
+        const raw = fs.readFileSync("src/routes/uploads/swagger-v1.yml")
+        const data = YAML.load(raw)
 
         fs.unlinkSync("src/routes/uploads/swagger-v1.yml")
 
@@ -15,12 +15,20 @@ exports.yamlDocGeneration = async (body) => {
         let paths = []
         let definitions = []
 
-        for (const lambda of lambdasName) {
-            paths.push({[lambda]: data.paths[lambda]})
+        if (Array.isArray(lambdasName)) {
+            for (const lambda of lambdasName) {
+                paths.push({ [lambda]: data.paths[lambda] })
+            }
+        } else {
+            paths = { [lambdasName]: data.paths[lambdasName] }
         }
 
-        for (const definiton of definitionsName) {
-            definitions.push({[definiton]: data.definitions[definiton]})
+        if (Array.isArray(definitionsName)) {
+            for (const definiton of definitionsName) {
+                definitions.push({ [definiton]: data.definitions[definiton] })
+            }
+        } else {
+            definitions = { [definitionsName]: data.definitions[definitionsName] }
         }
 
         let buildSwagger = {
@@ -29,19 +37,19 @@ exports.yamlDocGeneration = async (body) => {
             host: data.host,
             schemes: data.schemes,
             paths,
+            securityDefinitions: data.securityDefinitions ? data.securityDefinitions : null,
             definitions
         }
 
-        const doc = new JSON2YAML.Document()
-        doc.contents = buildSwagger;
+        const yamlFile = JSON2YAML.stringify(buildSwagger)
 
-        fs.writeFile('swagger-gerado-pela-api.yml', doc.toString(), (err) => {
-            if (err) throw err;
+        fs.writeFile('swagger-v1.yml', yamlFile, (err) => {
+            if (err) throw err
         })
 
-        return true;
+        return yamlFile
     } catch (error) {
-        console.log("error :: ", error);
+        console.log("error :: ", error)
 
         throw error
     }

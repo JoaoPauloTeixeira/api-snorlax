@@ -25,7 +25,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use("/", upload.single("file"),yamlDocGenerationRoute);
+app.use("/api-snorlax", upload.single("file"),yamlDocGenerationRoute);
 
 const route = router.get("/", (req, res, next) => {
   res.status(200).send({
